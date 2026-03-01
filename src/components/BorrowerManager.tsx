@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
 import { Borrower, LoanTransaction } from '../types';
-import { Users, Plus, Trash2, Search, FileSpreadsheet, Edit2, ArrowUpDown } from 'lucide-react';
+import { Users, Plus, Trash2, Search, FileSpreadsheet, Edit2, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { formatCurrency } from '../utils/loanCalculator';
 import { generateId } from '../utils/idGenerator';
 import ExcelImportModal from './ExcelImportModal';
@@ -45,6 +45,19 @@ export default function BorrowerManager() {
         showToast(`Peminjam "${newName}" berhasil ditambahkan`, 'success');
         setNewName('');
         setNewLimit('');
+    };
+
+    const toggleHide = (b: Borrower) => {
+        dispatch({
+            type: 'UPDATE_BORROWER',
+            payload: {
+                id: b.id,
+                name: b.name,
+                limit: b.limit,
+                isHidden: !b.isHidden
+            }
+        });
+        showToast(`Navigasi peminjam "${b.name}" ${!b.isHidden ? 'disembunyikan' : 'dimunculkan'}`, 'info');
     };
 
     const filteredBorrowers = state.borrowers.filter((b: Borrower) =>
@@ -156,8 +169,17 @@ export default function BorrowerManager() {
                                     .reduce((sum: number, t: LoanTransaction) => sum + (t.totalDue - t.paidAmount), 0);
 
                                 return (
-                                    <tr key={borrower.id} className="hover:bg-slate-800/50 transition-colors">
-                                        <td className="py-3 px-4 font-medium">{borrower.name}</td>
+                                    <tr key={borrower.id} className={`hover:bg-slate-800/50 transition-colors ${borrower.isHidden ? 'opacity-60' : ''}`}>
+                                        <td className="py-3 px-4">
+                                            <div className="font-medium flex items-center gap-2">
+                                                {borrower.name}
+                                                {borrower.isHidden && (
+                                                    <span className="text-[10px] bg-slate-700 text-slate-300 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                                        Disembunyikan
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
                                         <td className="py-3 px-4 text-slate-300">{formatCurrency(borrower.limit)}</td>
                                         <td className="py-3 px-4">
                                             {currentDebt > 0 ? (
@@ -171,10 +193,17 @@ export default function BorrowerManager() {
                                             )}
                                         </td>
                                         <td className="py-3 px-4 text-right">
-                                            <div className="flex justify-end gap-2">
+                                            <div className="flex justify-end gap-1">
+                                                <button
+                                                    onClick={() => toggleHide(borrower)}
+                                                    className={`p-2 rounded-lg transition-colors ${borrower.isHidden ? 'text-blue-400 bg-blue-500/10 hover:bg-blue-500/20' : 'text-slate-400 hover:text-blue-400 hover:bg-slate-700'}`}
+                                                    title={borrower.isHidden ? "Munculkan Kembali" : "Sembunyikan dari Input Transaksi"}
+                                                >
+                                                    {borrower.isHidden ? <Eye size={16} /> : <EyeOff size={16} />}
+                                                </button>
                                                 <button
                                                     onClick={() => setEditBorrowerId(borrower.id)}
-                                                    className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                                    className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
                                                     title="Edit Data"
                                                 >
                                                     <Edit2 size={16} />

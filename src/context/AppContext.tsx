@@ -105,7 +105,7 @@ type Action =
     | { type: 'UPDATE_TRANSACTION'; payload: { id: string; totalPrincipal: number; totalDue: number; interestRate?: number; isPriority?: boolean; paidAmount?: number } }
     | { type: 'UPDATE_CONFIG'; payload: Partial<AppConfig> }
     | { type: 'LOAD_STATE'; payload: AppState }
-    | { type: 'UPDATE_BORROWER'; payload: { id: string; name: string; limit: number } }
+    | { type: 'UPDATE_BORROWER'; payload: { id: string; name: string; limit: number; isHidden?: boolean } }
     | { type: 'MOVE_LOAN_CATEGORY'; payload: { id: string; newCategory: 'Gaji' | 'Remon' } }
     | { type: 'ADD_ARREAR_MANUAL'; payload: LoanTransaction }
     | { type: 'UPDATE_ARREAR'; payload: { id: string; totalPrincipal: number; totalDue: number; createdAt: string; dueMonth: string; isPriority?: boolean; paidAmount?: number } }
@@ -122,10 +122,10 @@ function appReducer(state: AppState, action: Action): AppState {
             return { ...state, borrowers: state.borrowers.filter(b => b.id !== action.payload) };
 
         case 'UPDATE_BORROWER': {
-            const { id, name, limit } = action.payload;
+            const { id, name, limit, isHidden } = action.payload;
             return {
                 ...state,
-                borrowers: state.borrowers.map(b => b.id === id ? { ...b, name, limit } : b),
+                borrowers: state.borrowers.map(b => b.id === id ? { ...b, name, limit, isHidden: isHidden !== undefined ? isHidden : b.isHidden } : b),
                 // Also update names in transactions for consistency
                 transactions: state.transactions.map(t => t.borrowerId === id ? { ...t, borrowerName: name } : t)
             };

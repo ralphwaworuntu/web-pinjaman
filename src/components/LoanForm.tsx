@@ -82,11 +82,11 @@ export default function LoanForm() {
         };
     }, [selectedBorrowerId, amount, state.transactions, state.borrowers, interestRate, category, activeMonth]);
 
-    // Sort borrowers alphabetically A-Z
+    // Sort borrowers alphabetically A-Z and hide those with isHidden = true
     const sortedBorrowers = useMemo(() => {
-        return [...state.borrowers].sort((a: Borrower, b: Borrower) =>
-            a.name.localeCompare(b.name)
-        );
+        return [...state.borrowers]
+            .filter((b: Borrower) => !b.isHidden)
+            .sort((a: Borrower, b: Borrower) => a.name.localeCompare(b.name));
     }, [state.borrowers]);
 
     const executeLoanTransaction = () => {

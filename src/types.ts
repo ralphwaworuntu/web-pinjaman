@@ -4,6 +4,7 @@ export interface Borrower {
     id: string;
     name: string;
     limit: number;
+    isHidden?: boolean;
 }
 
 export interface Installment {
