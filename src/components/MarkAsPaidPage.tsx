@@ -209,9 +209,12 @@ export default function MarkAsPaidPage() {
                                             </h4>
                                             <div className="flex flex-col gap-0.5">
                                                 <span className={`font-bold text-base sm:text-lg ${isLunas ? 'text-emerald-400 line-through opacity-70' : 'text-rose-400'}`}>
-                                                    {formatCurrency(tx.totalDue)}
+                                                    {isLunas ? formatCurrency(tx.totalDue) : formatCurrency(tx.totalDue - tx.paidAmount)}
                                                 </span>
                                                 <p className="text-slate-400 text-xs sm:text-sm">
+                                                    {tx.paidAmount > 0 && !isLunas ? (
+                                                        <span className="text-amber-400">Dicicil: {formatCurrency(tx.paidAmount)} • </span>
+                                                    ) : null}
                                                     Cair: {formatCurrency(tx.totalPrincipal)}
                                                 </p>
                                             </div>
