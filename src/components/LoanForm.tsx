@@ -82,6 +82,13 @@ export default function LoanForm() {
         };
     }, [selectedBorrowerId, amount, state.transactions, state.borrowers, interestRate, category, activeMonth]);
 
+    // Sort borrowers alphabetically A-Z
+    const sortedBorrowers = useMemo(() => {
+        return [...state.borrowers].sort((a: Borrower, b: Borrower) =>
+            a.name.localeCompare(b.name)
+        );
+    }, [state.borrowers]);
+
     const executeLoanTransaction = () => {
         dispatch({
             type: 'ADD_LOAN',
@@ -170,7 +177,7 @@ export default function LoanForm() {
                             required
                         >
                             <option value="">-- Pilih Nama --</option>
-                            {state.borrowers.map((b: Borrower) => (
+                            {sortedBorrowers.map((b: Borrower) => (
                                 <option key={b.id} value={b.id}>{b.name}</option>
                             ))}
                         </select>
