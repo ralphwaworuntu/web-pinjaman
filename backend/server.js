@@ -1,7 +1,9 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -170,6 +172,20 @@ app.post('/api/state', async (req, res) => {
     }
 });
 
+// Satu proses untuk situs + API saat di-host (npm start).
+// Saat development, Vite yang menyajikan UI dan meneruskan /api ke port ini.
+const distPath = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.use((req, res, next) => {
+        if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+        if (req.path.startsWith('/api')) return next();
+        res.sendFile(path.join(distPath, 'index.html'), (err) => {
+            if (err) next();
+        });
+    });
+}
+
 app.listen(PORT, () => {
-    console.log(`🚀 Server Backend berjalan di http://localhost:${PORT}`);
+    console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
 });

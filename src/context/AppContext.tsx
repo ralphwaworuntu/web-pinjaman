@@ -672,10 +672,20 @@ const AppContext = createContext<{
     }
 });
 
+const configuredApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+
+// Di hosting, jangan pernah memanggil localhost: itu komputer pengunjung, bukan server.
+const resolveApiUrl = (): string => {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const pageIsLocal = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+    const configuredIsLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(\/|$)/i.test(configuredApiUrl);
+    if (configuredApiUrl && !(configuredIsLocal && !pageIsLocal)) return configuredApiUrl;
+    return '/api';
+};
+
 // Provider Component
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-    // API URL dynamically adapting to Env or relative path if deployed properly
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const API_URL = resolveApiUrl();
 
     // Muat state & outbox dari LocalStorage dulu (tampil instan, juga saat offline)
     const initRef = useRef<{ state: AppState; meta: SyncMeta } | null>(null);
