@@ -12,6 +12,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DatabaseManager from './components/DatabaseManager';
 import MarkAsPaidPage from './components/MarkAsPaidPage';
+import SyncStatus from './components/SyncStatus';
 
 type Page = 'landing' | 'login' | 'dashboard';
 type Tab = 'dashboard' | 'input' | 'markPaid' | 'borrowers' | 'recap' | 'config' | 'database' | 'arrears';
@@ -135,13 +136,16 @@ function App() {
                     </div>
                     <span className="font-bold text-lg tracking-tight">Web Pinjaman</span>
                 </div>
-                <button
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="text-slate-300 p-2 hover:bg-white/5 rounded-xl transition-colors"
-                    aria-label="Toggle menu"
-                >
-                    {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-                </button>
+                <div className="flex items-center gap-2">
+                    <SyncStatus compact />
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="text-slate-300 p-2 hover:bg-white/5 rounded-xl transition-colors"
+                        aria-label="Toggle menu"
+                    >
+                        {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
+                </div>
             </div>
 
             {/* Sidebar Overlay for Mobile */}
@@ -303,10 +307,7 @@ function App() {
                         <div className="bg-slate-900/50 p-3 rounded-xl border border-white/5">
                             <div className="flex items-center justify-between mb-1.5">
                                 <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Siklus Aktif</p>
-                                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                    <span className="text-[10px] font-bold text-emerald-400">ONLINE</span>
-                                </div>
+                                <SyncStatus compact />
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className={`text-sm font-bold transition-colors duration-300 ${theme.cycleText}`}>
@@ -347,7 +348,8 @@ function App() {
                         </p>
                     </div>
 
-                    <div className="hidden md:block">
+                    <div className="hidden md:flex items-center gap-3">
+                        <SyncStatus />
                         <div className={`bg-slate-900/50 backdrop-blur-md px-4 py-2 rounded-xl border border-white/5 text-sm font-bold shadow-lg transition-colors duration-500 flex items-center gap-2 ${theme.cycleText}`}>
                             <span className="w-2 h-2 rounded-full bg-current opacity-70"></span>
                             {state.config.activeCycle === 'Gaji' ? state.config.activeMonthGaji : state.config.activeMonthRemon}

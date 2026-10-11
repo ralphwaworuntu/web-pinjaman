@@ -11,7 +11,7 @@ interface Toast {
 
 interface ToastContextType {
     toasts: Toast[];
-    showToast: (message: string, type?: ToastType) => void;
+    showToast: (message: string, type?: ToastType, durationMs?: number) => void;
     removeToast: (id: string) => void;
 }
 
@@ -28,12 +28,12 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
         setToasts(prev => prev.filter(t => t.id !== id));
     }, []);
 
-    const showToast = useCallback((message: string, type: ToastType = 'success') => {
+    const showToast = useCallback((message: string, type: ToastType = 'success', durationMs: number = 3000) => {
         const id = generateId();
         setToasts(prev => [...prev, { id, message, type }]);
 
-        // Auto-dismiss after 3 seconds
-        setTimeout(() => removeToast(id), 3000);
+        // Auto-dismiss (default 3 seconds)
+        setTimeout(() => removeToast(id), durationMs);
     }, [removeToast]);
 
     return (

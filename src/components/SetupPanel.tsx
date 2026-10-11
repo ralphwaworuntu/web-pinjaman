@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Settings, Calendar, Percent, UploadCloud, Link, X, Lock, Key, ShieldCheck, AlertCircle } from 'lucide-react';
+import MonthYearSelect from './MonthYearSelect';
+import { MONTH_NAMES, joinMonth, monthsOfYear, sortMonthList, yearsOf } from '../utils/month';
 
 export default function SetupPanel() {
     const { state, dispatch } = useApp();
@@ -16,24 +18,12 @@ export default function SetupPanel() {
     const [passwordError, setPasswordError] = useState('');
     const [passwordSuccess, setPasswordSuccess] = useState(false);
 
-    // Helper to Sort Months Chronologically
-    const sortMonths = (months: string[]) => {
-        const monthsList = [
-            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
-        return [...months].sort((a, b) => {
-            const [monthA, yearA] = a.split(' ');
-            const [monthB, yearB] = b.split(' ');
+    // Tambah bulan baru: pilihan Bulan dan Tahun terpisah
+    const [newMonthName, setNewMonthName] = useState<string>(MONTH_NAMES[new Date().getMonth()]);
+    const [newMonthYear, setNewMonthYear] = useState<string>(new Date().getFullYear().toString());
 
-            if (yearA !== yearB) {
-                return (parseInt(yearA) || 0) - (parseInt(yearB) || 0);
-            }
-            return monthsList.indexOf(monthA) - monthsList.indexOf(monthB);
-        });
-    };
-
-    const sortedAvailableMonths = sortMonths(config.availableMonths || []);
+    const sortedAvailableMonths = sortMonthList(config.availableMonths || []);
+    const availableYears = yearsOf(sortedAvailableMonths); // terbaru di atas
 
     const handleCredentialsChange = (e: React.FormEvent) => {
         e.preventDefault();
@@ -122,15 +112,13 @@ export default function SetupPanel() {
                             <label className="text-slate-400 text-xs uppercase font-bold">Bulan Aktif</label>
                             <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 p-2 rounded-lg">
                                 <Calendar size={18} className="text-blue-500 ml-2" />
-                                <select
+                                <MonthYearSelect
+                                    months={sortedAvailableMonths}
                                     value={config.activeMonthGaji}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => dispatch({ type: 'UPDATE_CONFIG', payload: { activeMonthGaji: e.target.value } })}
-                                    className="bg-transparent border-none focus:ring-0 text-slate-200 w-full text-sm font-medium [&>option]:bg-slate-900 [&>option]:text-slate-200"
-                                >
-                                    {sortedAvailableMonths.map(m => (
-                                        <option key={m} value={m}>{m}</option>
-                                    ))}
-                                </select>
+                                    onChange={(v) => dispatch({ type: 'UPDATE_CONFIG', payload: { activeMonthGaji: v } })}
+                                    className="w-full"
+                                    selectClassName="w-full appearance-none bg-transparent border-none focus:ring-0 text-slate-200 text-sm font-medium pl-2 pr-7 py-1.5 cursor-pointer [&>option]:bg-slate-900 [&>option]:text-slate-200"
+                                />
                             </div>
                         </div>
 
@@ -175,15 +163,13 @@ export default function SetupPanel() {
                             <label className="text-slate-400 text-xs uppercase font-bold">Bulan Aktif</label>
                             <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 p-2 rounded-lg">
                                 <Calendar size={18} className="text-purple-500 ml-2" />
-                                <select
+                                <MonthYearSelect
+                                    months={sortedAvailableMonths}
                                     value={config.activeMonthRemon}
-                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => dispatch({ type: 'UPDATE_CONFIG', payload: { activeMonthRemon: e.target.value } })}
-                                    className="bg-transparent border-none focus:ring-0 text-slate-200 w-full text-sm font-medium [&>option]:bg-slate-900 [&>option]:text-slate-200"
-                                >
-                                    {sortedAvailableMonths.map(m => (
-                                        <option key={m} value={m}>{m}</option>
-                                    ))}
-                                </select>
+                                    onChange={(v) => dispatch({ type: 'UPDATE_CONFIG', payload: { activeMonthRemon: v } })}
+                                    className="w-full"
+                                    selectClassName="w-full appearance-none bg-transparent border-none focus:ring-0 text-slate-200 text-sm font-medium pl-2 pr-7 py-1.5 cursor-pointer [&>option]:bg-slate-900 [&>option]:text-slate-200"
+                                />
                             </div>
                         </div>
 
@@ -263,18 +249,34 @@ export default function SetupPanel() {
                     </h4>
                     <p className="text-xs text-slate-500">Tambahkan bulan baru ke dalam daftar agar bisa dipilih sebagai bulan aktif.</p>
 
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-[1fr_6rem_auto] gap-2">
+                        <select
+                            aria-label="Bulan"
+                            value={newMonthName}
+                            onChange={(e) => setNewMonthName(e.target.value)}
+                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 cursor-pointer [&>option]:bg-slate-900"
+                        >
+                            {MONTH_NAMES.map(m => (
+                                <option key={m} value={m}>{m}</option>
+                            ))}
+                        </select>
                         <input
-                            type="text"
-                            id="newMonthInput"
-                            placeholder="Contoh: Mei 2026"
-                            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                            aria-label="Tahun"
+                            type="number"
+                            min={2000}
+                            max={2100}
+                            value={newMonthYear}
+                            onChange={(e) => setNewMonthYear(e.target.value)}
+                            placeholder="Tahun"
+                            className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
                         />
                         <button
                             onClick={() => {
-                                const input = document.getElementById('newMonthInput') as HTMLInputElement;
-                                const val = input.value.trim();
-                                if (!val) return;
+                                if (!/^\d{4}$/.test(newMonthYear)) {
+                                    alert('Tahun harus 4 angka, contoh: 2026');
+                                    return;
+                                }
+                                const val = joinMonth(newMonthName, newMonthYear);
 
                                 const currentMonths = config.availableMonths || [];
                                 if (currentMonths.includes(val)) {
@@ -284,9 +286,8 @@ export default function SetupPanel() {
 
                                 dispatch({
                                     type: 'UPDATE_CONFIG',
-                                    payload: { availableMonths: [...currentMonths, val].sort() }
+                                    payload: { availableMonths: sortMonthList([...currentMonths, val]) }
                                 });
-                                input.value = '';
                             }}
                             className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all"
                         >
@@ -311,27 +312,11 @@ export default function SetupPanel() {
                                 const year = yearInput.value;
                                 if (!year) return;
 
-                                const monthsList = [
-                                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-                                ];
-
-                                const newMonths = monthsList.map(m => `${m} ${year}`);
+                                const newMonths = MONTH_NAMES.map(m => joinMonth(m, year));
                                 const currentMonths = config.availableMonths || [];
 
-                                // Merge and Dedup
-                                const uniqueMonths = Array.from(new Set([...currentMonths, ...newMonths]));
-
-                                // Chronological Sort
-                                const sortedMonths = uniqueMonths.sort((a, b) => {
-                                    const [monthA, yearA] = a.split(' ');
-                                    const [monthB, yearB] = b.split(' ');
-
-                                    if (yearA !== yearB) {
-                                        return parseInt(yearA) - parseInt(yearB);
-                                    }
-                                    return monthsList.indexOf(monthA) - monthsList.indexOf(monthB);
-                                });
+                                // Merge, dedup, dan urutkan kronologis
+                                const sortedMonths = sortMonthList(Array.from(new Set([...currentMonths, ...newMonths])));
 
                                 dispatch({
                                     type: 'UPDATE_CONFIG',
@@ -345,10 +330,16 @@ export default function SetupPanel() {
                         </button>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {sortedAvailableMonths.map(m => (
+                    <div className="space-y-3 mt-2">
+                      {availableYears.map(year => (
+                        <div key={year} className="flex flex-col sm:flex-row sm:items-start gap-2">
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider sm:w-14 sm:pt-1.5 shrink-0">{year}</span>
+                          <div className="flex flex-wrap gap-2">
+                        {monthsOfYear(sortedAvailableMonths, year).map(monthName => {
+                            const m = joinMonth(monthName, year);
+                            return (
                             <div key={m} className="pl-3 pr-1 py-1 bg-slate-900 rounded-full border border-slate-700 text-xs text-slate-300 flex items-center gap-1 group hover:border-slate-500 transition-colors">
-                                {m}
+                                {monthName}
                                 <button
                                     onClick={() => {
                                         if (m === config.activeMonthGaji || m === config.activeMonthRemon) {
@@ -369,7 +360,11 @@ export default function SetupPanel() {
                                     <X size={12} />
                                 </button>
                             </div>
-                        ))}
+                            );
+                        })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                 </div>
 

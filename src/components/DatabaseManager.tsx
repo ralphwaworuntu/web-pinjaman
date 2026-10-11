@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
-import { useApp } from '../context/AppContext';
+import { useApp, clearLocalSyncData } from '../context/AppContext';
 import { useToast } from '../context/ToastContext';
-import { Download, Upload, RefreshCw, Database, AlertTriangle } from 'lucide-react';
+import { Download, Upload, RefreshCw, Database, AlertTriangle, Cloud } from 'lucide-react';
 
 export default function DatabaseManager() {
-    const { state, dispatch } = useApp();
+    const { state, dispatch, sync } = useApp();
     const { showToast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,7 +63,7 @@ export default function DatabaseManager() {
     const handleReset = () => {
         if (window.confirm('BAHAYA: Apakah Anda yakin ingin menghapus SEMUA data? Data tidak dapat dikembalikan!')) {
             if (window.confirm('Konfirmasi terakhir: Hapus semua data permanen?')) {
-                localStorage.removeItem('web-pinjaman-data');
+                clearLocalSyncData();
                 window.location.reload();
             }
         }
@@ -80,6 +80,70 @@ export default function DatabaseManager() {
                     <p className="text-slate-400">Backup dan Restore data aplikasi untuk dipindahkan ke perangkat lain</p>
                 </div>
             </div>
+
+            {/* Sinkronisasi Server */}
+            <div className="card-glass p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between hover:border-indigo-500/30 transition-colors">
+                <div className="flex items-start gap-3">
+                    <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 mt-0.5">
+                        <Cloud size={22} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold">Sinkronisasi Server</h3>
+                        <p className="text-slate-400 text-sm">
+                            {sync.pendingCount > 0
+                                ? `${sync.pendingCount} perubahan belum tersimpan di server. Akan dikirim otomatis saat koneksi stabil.`
+                                : 'Semua perubahan sudah tersimpan di server.'}
+                        </p>
+                        {sync.lastSavedAt && (
+                            <p className="text-xs text-slate-500 mt-1">
+                                Terakhir tersimpan: {new Date(sync.lastSavedAt).toLocaleTimeString('id-ID')}
+                            </p>
+                        )}
+                    </div>
+                </div>
+                <button
+                    onClick={sync.syncNow}
+                    disabled={sync.status === 'saving'}
+                    className="btn-primary bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+                >
+                    <RefreshCw size={18} className={sync.status === 'saving' ? 'animate-spin' : ''} />
+                    Sinkronkan Sekarang
+                </button>
+            </div>
+
+            {/* Catatan sinkronisasi (perubahan yang diabaikan / digabung) */}
+            {sync.notices.length > 0 && (
+                <div className="card-glass p-6 space-y-3 border-amber-500/20">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-amber-400">
+                            <AlertTriangle size={20} />
+                            <h3 className="text-lg font-bold">Catatan Sinkronisasi</h3>
+                        </div>
+                        <button
+                            onClick={sync.clearNotices}
+                            className="text-xs font-medium text-slate-400 hover:text-white underline underline-offset-2"
+                        >
+                            Bersihkan
+                        </button>
+                    </div>
+                    <ul className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                        {sync.notices.map(n => (
+                            <li
+                                key={n.id}
+                                className={`text-sm rounded-lg border px-3 py-2 ${n.kind === 'merged'
+                                    ? 'bg-blue-500/10 border-blue-500/20 text-blue-300'
+                                    : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+                                    }`}
+                            >
+                                <p>{n.message}</p>
+                                <p className="text-[10px] opacity-60 mt-0.5">
+                                    {new Date(n.at).toLocaleString('id-ID')}
+                                </p>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             <div className="grid md:grid-cols-2 gap-6">
                 {/* Backup Section */}

@@ -2,19 +2,21 @@ import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { LoanTransaction } from '../types';
 import { formatCurrency } from '../utils/loanCalculator';
-import { FileText, TrendingUp, Wallet, Calendar, Users, Filter, ArrowUpDown } from 'lucide-react';
+import { FileText, TrendingUp, Wallet, Users, ArrowUpDown } from 'lucide-react';
+import MonthYearSelect from './MonthYearSelect';
+import { ALL_PERIOD, matchesPeriod } from '../utils/month';
 
 
 
 export default function RecapPage() {
     const { state } = useApp();
-    const [selectedMonth, setSelectedMonth] = useState<string>('Semua Waktu');
+    const [selectedMonth, setSelectedMonth] = useState<string>(ALL_PERIOD);
     const [sortConfig, setSortConfig] = useState<'name-asc' | 'name-desc' | 'profit-desc' | 'profit-asc'>('name-asc');
 
     // Filter transactions based on selected month
     const filteredTransactions = useMemo(() => {
-        if (selectedMonth === 'Semua Waktu') return state.transactions;
-        return state.transactions.filter((t: LoanTransaction) => t.dueMonth === selectedMonth);
+        if (selectedMonth === ALL_PERIOD) return state.transactions;
+        return state.transactions.filter((t: LoanTransaction) => matchesPeriod(t.dueMonth, selectedMonth));
         return state.transactions.filter((t: LoanTransaction) => {
             // Check if transaction belongs to active month of its category
             // const activeMonth = t.category === 'Gaji' ? state.config.activeMonthGaji : state.config.activeMonthRemon;
@@ -133,26 +135,14 @@ export default function RecapPage() {
                     </div>
                 </div>
 
-                <div className="flex bg-slate-800 p-1 rounded-lg">
-                    <div className="relative">
-                        <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            className="bg-slate-800 text-white text-sm font-bold pl-9 pr-8 py-2 rounded-md border-none focus:ring-0 cursor-pointer appearance-none hover:bg-slate-700 transition-colors"
-                        >
-                            <option value="Semua Waktu">Semua Waktu</option>
-                            <optgroup label="Pilih Bulan">
-                                {(state.config.availableMonths || []).map(month => (
-                                    <option key={month} value={month}>{month}</option>
-                                ))}
-                            </optgroup>
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <Calendar size={14} className="text-slate-500" />
-                        </div>
-                    </div>
-                </div>
+                <MonthYearSelect
+                    months={state.config.availableMonths || []}
+                    value={selectedMonth}
+                    onChange={setSelectedMonth}
+                    allowAll
+                    className="w-full md:w-96"
+                    selectClassName="w-full appearance-none bg-slate-800 border border-slate-700 text-white text-sm font-bold py-2.5 pl-3 pr-8 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer hover:bg-slate-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed [&>option]:bg-slate-900"
+                />
             </div>
 
             {/* Summary Cards */}
@@ -163,7 +153,7 @@ export default function RecapPage() {
                         <Wallet size={24} />
                     </div>
                     <p className="text-3xl font-bold text-white mb-1">{formatCurrency(summary.totalModal)}</p>
-                    <p className="text-xs text-blue-400/60">Dana yang dipinjamkan {selectedMonth === 'Semua Waktu' ? '(Total)' : `(${selectedMonth})`}</p>
+                    <p className="text-xs text-blue-400/60">Dana yang dipinjamkan {selectedMonth === ALL_PERIOD ? '(Total)' : `(${selectedMonth})`}</p>
                 </div>
 
                 <div className="card-glass p-6 text-emerald-400 border-emerald-500/20 bg-emerald-500/5">

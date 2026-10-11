@@ -6,6 +6,7 @@ import { X, FileDown, Check } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatCurrency } from '../utils/loanCalculator';
+import MonthYearSelect from './MonthYearSelect';
 
 interface ExportPdfModalProps {
     isOpen: boolean;
@@ -194,18 +195,12 @@ export default function ExportPdfModal({ isOpen, onClose }: ExportPdfModalProps)
                                 Pilih Periode
                             </label>
                             <div className="relative group">
-                                <select
+                                <MonthYearSelect
+                                    months={state.config.availableMonths || []}
                                     value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(e.target.value)}
-                                    className="w-full bg-slate-950/50 border border-slate-600 rounded-xl px-4 py-3.5 text-base font-medium text-white focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 appearance-none cursor-pointer hover:border-slate-500 transition-all shadow-lg"
-                                >
-                                    {(state.config.availableMonths || []).map(month => (
-                                        <option key={month} value={month}>{month}</option>
-                                    ))}
-                                </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-white transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                </div>
+                                    onChange={setSelectedMonth}
+                                    selectClassName="w-full bg-slate-950/50 border border-slate-600 rounded-xl pl-4 pr-9 py-3.5 text-base font-medium text-white focus:outline-none focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 appearance-none cursor-pointer hover:border-slate-500 transition-all shadow-lg [&>option]:bg-slate-900"
+                                />
                             </div>
                         </div>
 

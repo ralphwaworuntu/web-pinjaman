@@ -1,14 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/loanCalculator';
-import { Search, CheckCircle, Circle, Filter, ArrowUpDown } from 'lucide-react';
+import { Search, CheckCircle, Circle, ArrowUpDown } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import ConfirmationModal from './ConfirmationModal';
+import MonthYearSelect from './MonthYearSelect';
+import { ACTIVE_PERIOD, matchesPeriod } from '../utils/month';
 export default function MarkAsPaidPage() {
     const { state, dispatch } = useApp();
     const { showToast } = useToast();
     const [search, setSearch] = useState('');
-    const [selectedMonth, setSelectedMonth] = useState<string>('Semua');
+    const [selectedMonth, setSelectedMonth] = useState<string>(ACTIVE_PERIOD);
     const [selectedCategory, setSelectedCategory] = useState<'Semua' | 'Gaji' | 'Remon'>('Semua');
     const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'date'; direction: 'asc' | 'desc' }>({ key: 'name', direction: 'asc' });
     const [confirmModal, setConfirmModal] = useState<{
@@ -19,12 +21,17 @@ export default function MarkAsPaidPage() {
         borrowerName: string;
     } | null>(null);
 
+    const { activeMonthGaji, activeMonthRemon } = state.config;
+
     const filteredTransactions = useMemo(() => {
         return state.transactions.filter(t => {
             if (t.isArrear) return false; // Focus on active loans
 
             // Filters
-            if (selectedMonth !== 'Semua' && t.dueMonth !== selectedMonth) return false;
+            if (selectedMonth === ACTIVE_PERIOD) {
+                const activeMonth = t.category === 'Gaji' ? activeMonthGaji : activeMonthRemon;
+                if (t.dueMonth !== activeMonth) return false;
+            } else if (!matchesPeriod(t.dueMonth, selectedMonth)) return false;
             if (selectedCategory !== 'Semua' && t.category !== selectedCategory) return false;
             if (search && !t.borrowerName.toLowerCase().includes(search.toLowerCase())) return false;
 
@@ -48,7 +55,7 @@ export default function MarkAsPaidPage() {
                 return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
             }
         });
-    }, [state.transactions, selectedMonth, selectedCategory, search]);
+    }, [state.transactions, selectedMonth, selectedCategory, search, sortConfig, activeMonthGaji, activeMonthRemon]);
 
     const handleTogglePaidClick = (txId: string, isLunas: boolean, totalDue: number, borrowerName: string) => {
         setConfirmModal({
@@ -102,6 +109,11 @@ export default function MarkAsPaidPage() {
                             <span className="text-xs font-normal text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
                                 {filteredTransactions.length} Data
                             </span>
+                            {selectedMonth === ACTIVE_PERIOD && (
+                                <span className="text-xs font-normal text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                    Periode aktif
+                                </span>
+                            )}
                         </h3>
                         <p className="text-slate-400 text-sm mt-1">Centang untuk melunasi seluruh tagihan sekaligus.</p>
                     </div>
@@ -168,18 +180,18 @@ export default function MarkAsPaidPage() {
                         <div className="w-px h-8 bg-slate-700 hidden xl:block" />
 
                         {/* Month Filter */}
-                        <div className="relative w-full xl:w-64">
-                            <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                            <select
+                        <div className="w-full xl:w-80">
+                            <MonthYearSelect
+                                months={state.config.availableMonths || []}
                                 value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="input-field pl-9 py-2 text-base font-medium w-full appearance-none cursor-pointer"
-                            >
-                                <option value="Semua">Semua Bulan</option>
-                                {state.config.availableMonths?.map(month => (
-                                    <option key={month} value={month}>{month}</option>
-                                ))}
-                            </select>
+                                onChange={setSelectedMonth}
+                                allowAll
+                                allowActive
+                                activeLabel={activeMonthGaji === activeMonthRemon
+                                    ? `Periode Aktif (${activeMonthGaji})`
+                                    : `Periode Aktif (Gaji: ${activeMonthGaji}, Remon: ${activeMonthRemon})`}
+                                selectClassName="input-field py-2 text-base font-medium w-full appearance-none cursor-pointer pl-3 pr-8 disabled:opacity-60 disabled:cursor-not-allowed"
+                            />
                         </div>
                     </div>
                 </div>

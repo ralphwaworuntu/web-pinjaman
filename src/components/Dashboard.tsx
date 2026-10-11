@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import FinancialSummary from './FinancialSummary';
 import LoanTable from './LoanTable';
+import MonthYearSelect from './MonthYearSelect';
 import { LayoutDashboard, Calendar, ChevronDown } from 'lucide-react';
 
 type ViewMode = 'overview' | 'monthly' | 'yearly';
@@ -69,20 +70,13 @@ export default function Dashboard() {
                 </div>
 
                 {viewMode === 'monthly' && (
-                    <div className="relative">
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            className="appearance-none bg-slate-800 border border-slate-700 text-white text-sm font-bold pl-4 pr-10 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer hover:bg-slate-750 transition-colors bg-none"
-                        >
-                            {availableMonths.map((month) => (
-                                <option key={month} value={month}>
-                                    {month}
-                                </option>
-                            ))}
-                        </select>
-                        <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
+                    <MonthYearSelect
+                        months={availableMonths}
+                        value={selectedMonth}
+                        onChange={setSelectedMonth}
+                        className="w-full sm:w-auto sm:min-w-[22rem]"
+                        selectClassName="w-full appearance-none bg-slate-800 border border-slate-700 text-white text-sm font-bold pl-4 pr-9 py-2.5 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer hover:bg-slate-700 transition-colors bg-none [&>option]:bg-slate-900"
+                    />
                 )}
 
                 {viewMode === 'yearly' && (
